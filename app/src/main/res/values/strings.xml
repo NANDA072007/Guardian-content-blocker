@@ -1,0 +1,29 @@
+<resources>
+    <string name="app_name">Guardian</string>
+    <string name="accessibility_service_description">Monitors browser URL bar to block adult domains</string>
+    <string name="device_admin_label">Guardian Anti-Uninstall</string>
+    <string name="device_admin_description">Prevents unauthorized removal of the Guardian app</string>
+    <string name="dashboard_title">Guardian Dashboard</string>
+    <string name="settings_title">Settings</string>
+    <string name="trusted_person_title">Trusted Person</string>
+    <string name="emergency_title">Emergency Sanctuary</string>
+    <string name="privacy_policy_title">Privacy Policy</string>
+    <string name="wall_1_title">Wall 1 (DNS/VPN)</string>
+    <string name="wall_1_desc">Blocks adult domains at network level</string>
+    <string name="wall_2_title">Wall 2 (Accessibility)</string>
+    <string name="wall_2_desc">Monitors browser URL entry</string>
+    <string name="wall_4_title">Wall 4 (Device Admin)</string>
+    <string name="wall_4_desc">Prevents app uninstallation</string>
+    <string name="system_armed">System Armed: Maximum Protection</string>
+    <string name="defenses_compromised">Defenses Compromised</string>
+    <string name="grant_overlay">Grant Required Overlay Permission</string>
+    <string name="disable_battery_opt">Disable Battery Optimization</string>
+    <string name="emergency_mode">EMERGENCY MODE</string>
+    <string name="current_streak">Current Streak</string>
+    <string name="day_count">Day %d</string>
+    <string name="vpn_notification_title">Guardian DNS Active</string>
+    <string name="vpn_notification_text">Blocking adult domains at network level</string>
+    <string name="core_notification_title">Guardian is Active</string>
+    <string name="core_notification_text">Your device is currently protected</string>
+    <string name="privacy_policy_link">https://guardian.app/privacy</string>
+</resources>
