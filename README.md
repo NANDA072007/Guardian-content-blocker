@@ -28,19 +28,23 @@ If Android tries to kill the Guardian background service to save battery, our cu
 ## Privacy First
 **Zero Cloud Infrastructure.** All text analysis, domain blocking, and streak tracking occur entirely locally on your device. We do not track your browsing history.
 
-## Setup Instructions
+## Download & Install
 
-### Prerequisites
-- Android Studio Ladybug or newer
-- Minimum SDK: 24 (Android 7.0)
+For standard users, you do **not** need to download code or use Android Studio. You can download the app directly to your phone:
 
-### Building the App
+1. Go to the [Releases Page](https://github.com/NANDA072007/Guardian-content-blocker/releases) of this repository.
+2. Download the latest `app-release.apk` file to your Android device.
+3. Open the file and tap **Install** (you may need to allow "Install from Unknown Sources" in your Android settings).
+4. Open Guardian and follow the setup instructions to activate the 4-Wall Protection.
+
+### For Developers (If you want to contribute)
+If you want to view the source code or contribute:
 1. Clone this repository:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/Guardian.git
+   git clone https://github.com/NANDA072007/Guardian-content-blocker.git
    ```
 2. Open the project in Android Studio.
-3. Sync Gradle and click `Run` (or run `.\gradlew assembleDebug` from the command line).
+3. Sync Gradle and click `Run`. Pull requests are heavily encouraged!
 
 ### Contributing
 This project is fully open-source. Pull requests for new features, bug fixes, and expanded blocklists are heavily encouraged!
