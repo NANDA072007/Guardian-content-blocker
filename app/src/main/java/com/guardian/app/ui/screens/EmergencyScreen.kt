@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -25,6 +26,8 @@ import android.view.WindowManager
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.graphicsLayer
 
 @Composable
 fun EmergencyScreen(onNavigateBack: () -> Unit) {
@@ -90,11 +93,11 @@ fun EmergencyScreen(onNavigateBack: () -> Unit) {
     }
 
     Scaffold(
-        containerColor = Color(0xFF0A0A1A), // Deep calming blue/black
+        containerColor = Color(0xFF0A0A1A),
         topBar = {
             @OptIn(ExperimentalMaterial3Api::class)
             TopAppBar(
-                title = { Text("Emergency Sanctuary", color = Color.White) },
+                title = { Text("Emergency Sanctuary", color = Color.White, fontWeight = FontWeight.Bold, letterSpacing = 1.sp) },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
@@ -107,6 +110,11 @@ fun EmergencyScreen(onNavigateBack: () -> Unit) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(Color(0xFF0A0A1A), Color(0xFF121212))
+                    )
+                )
                 .padding(padding)
                 .padding(32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -116,15 +124,17 @@ fun EmergencyScreen(onNavigateBack: () -> Unit) {
             Text(
                 text = "Do not fight the urge.\nJust breathe through it.",
                 color = Color.LightGray,
-                fontSize = 18.sp,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Medium,
                 textAlign = TextAlign.Center,
+                lineHeight = 28.sp,
                 modifier = Modifier.padding(bottom = 64.dp)
             )
 
             // The Breathing Circle
             Box(
                 modifier = Modifier
-                    .size(250.dp),
+                    .size(280.dp),
                 contentAlignment = Alignment.Center
             ) {
                 // The animated expanding/contracting bubble
@@ -132,14 +142,31 @@ fun EmergencyScreen(onNavigateBack: () -> Unit) {
                     modifier = Modifier
                         .fillMaxSize()
                         .scale(scale)
-                        .background(Color(0xFF4FC3F7).copy(alpha = 0.3f), CircleShape)
+                        .graphicsLayer {
+                            shadowElevation = 20.dp.toPx()
+                            shape = CircleShape
+                            ambientShadowColor = Color(0xFF4FC3F7)
+                            spotShadowColor = Color(0xFF4FC3F7)
+                        }
+                        .background(
+                            Brush.radialGradient(
+                                colors = listOf(Color(0xFF4FC3F7).copy(alpha = 0.5f), Color(0xFF0288D1).copy(alpha = 0.2f))
+                            ), 
+                            CircleShape
+                        )
                 )
                 
                 // The solid inner bubble
                 Box(
                     modifier = Modifier
-                        .size(100.dp)
-                        .background(Color(0xFF0288D1), CircleShape),
+                        .size(120.dp)
+                        .shadow(elevation = 10.dp, shape = CircleShape)
+                        .background(
+                            Brush.linearGradient(
+                                colors = listOf(Color(0xFF29B6F6), Color(0xFF0288D1))
+                            ), 
+                            CircleShape
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -149,25 +176,28 @@ fun EmergencyScreen(onNavigateBack: () -> Unit) {
                             else -> "EXHALE\n(8s)"
                         },
                         color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        textAlign = TextAlign.Center,
+                        letterSpacing = 1.sp
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(64.dp))
+            Spacer(modifier = Modifier.height(80.dp))
 
             // Grounding Instruction
             Text(
                 text = "ACTION REQUIRED:\nStand up, leave this room, and get a glass of cold water right now.",
                 color = Color.White,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
+                fontSize = 18.sp,
+                lineHeight = 26.sp,
+                fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier.padding(horizontal = 16.dp)
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(48.dp))
 
             val partnerNumber = securityManager.getTrustedPersonContact()
             if (!partnerNumber.isNullOrEmpty()) {
@@ -178,13 +208,25 @@ fun EmergencyScreen(onNavigateBack: () -> Unit) {
                         }
                         context.startActivity(dialIntent)
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F)),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                    contentPadding = PaddingValues(0.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(12.dp)
+                        .height(60.dp),
+                    shape = RoundedCornerShape(16.dp)
                 ) {
-                    Text("Call Trusted Person", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.horizontalGradient(
+                                    colors = listOf(Color(0xFFEF5350), Color(0xFFC62828))
+                                )
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("Call Trusted Person", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp, letterSpacing = 1.sp)
+                    }
                 }
             }
         }

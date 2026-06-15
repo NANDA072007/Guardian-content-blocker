@@ -40,5 +40,8 @@ class WatchdogReceiver : BroadcastReceiver() {
                 }
             }
         }
+        
+        // Step 2: Schedule the next alarm (The Chain)
+        GuardianCoreService.scheduleAlarmChain(context)
     }
 }

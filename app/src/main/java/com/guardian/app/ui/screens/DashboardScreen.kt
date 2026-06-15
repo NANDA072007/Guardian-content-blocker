@@ -3,13 +3,16 @@ package com.guardian.app.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.animation.*
@@ -22,7 +25,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import android.net.VpnService
 import android.content.Intent
 import android.app.Activity
-import android.provider.Settings
+import android.provider.Settings as AndroidSettings
 import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
 import com.guardian.app.data.SecurityManager
@@ -60,6 +63,9 @@ fun DashboardScreen(
     var isOemAcknowledged by remember { mutableStateOf(securityManager.isOemOptimizationAcknowledged()) }
     var currentStreak by remember { mutableStateOf(0) }
     
+    val powerManager = context.getSystemService(android.content.Context.POWER_SERVICE) as? android.os.PowerManager
+    var isIgnoringBattery by remember { mutableStateOf(powerManager?.isIgnoringBatteryOptimizations(context.packageName) ?: true) }
+    
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -67,6 +73,10 @@ fun DashboardScreen(
                 isWall1Enabled = securityManager.isWall1Enabled()
                 isWall2Enabled = securityManager.isWall2Enabled()
                 isWall4Enabled = dpm.isAdminActive(componentName)
+                isIgnoringBattery = powerManager?.isIgnoringBatteryOptimizations(context.packageName) ?: true
+                
+                // Fetch the streak each time the dashboard comes to the foreground
+                currentStreak = dbHelper.getDaysCleanStreak()
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -94,11 +104,6 @@ fun DashboardScreen(
     val relockApp = {
         securityManager.setUninstallUnlockTime(0L)
     }
-
-    // Load streak on resume/composition
-    LaunchedEffect(Unit) {
-        currentStreak = dbHelper.getDaysCleanStreak()
-    }
     
     val vpnLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
@@ -117,9 +122,16 @@ fun DashboardScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Guardian Dashboard", color = Color.White) },
+                title = { 
+                    Text(
+                        "GUARDIAN", 
+                        color = Color.White, 
+                        fontWeight = FontWeight.ExtraBold, 
+                        letterSpacing = 4.sp
+                    ) 
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF1E1E1E)
+                    containerColor = Color(0xFF0A0A1A) // Darker, sleeker top bar
                 ),
                 actions = {
                     IconButton(onClick = onNavigateToSettings) {
@@ -132,13 +144,19 @@ fun DashboardScreen(
                 }
             )
         },
-        containerColor = Color(0xFF121212)
+        containerColor = Color(0xFF0A0A1A)
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(Color(0xFF0A0A1A), Color(0xFF121212))
+                    )
+                )
                 .padding(padding)
-                .padding(16.dp),
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             
@@ -184,9 +202,9 @@ fun DashboardScreen(
                     label = "shieldText"
                 ) { armed ->
                     if (armed) {
-                        Text("System Armed: Maximum Protection", color = Color(0xFF81C784), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        Text("SYSTEM ARMED", color = Color(0xFF81C784), fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 2.sp)
                     } else {
-                        Text("Defenses Compromised", color = Color(0xFFEF5350), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        Text("DEFENSES COMPROMISED", color = Color(0xFFEF5350), fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 2.sp)
                     }
                 }
             }
@@ -263,7 +281,7 @@ fun DashboardScreen(
                 isLocked = isWall2Enabled && !isUnlockAvailable,
                 onCheckedChange = { checked -> 
                     if (checked) {
-                        val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+                        val intent = Intent(AndroidSettings.ACTION_ACCESSIBILITY_SETTINGS)
                         context.startActivity(intent)
                         isWall2Enabled = true
                         securityManager.setWall2Enabled(true)
@@ -306,27 +324,8 @@ fun DashboardScreen(
                 }
             )
 
-            Spacer(modifier = Modifier.weight(1f))
+
             
-            // Request battery optimization exclusion
-            val powerManager = context.getSystemService(android.content.Context.POWER_SERVICE) as? android.os.PowerManager
-            if (powerManager != null && !powerManager.isIgnoringBatteryOptimizations(context.packageName)) {
-                Button(
-                    onClick = {
-                        val intent = Intent(
-                            android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
-                            Uri.parse("package:${context.packageName}")
-                        )
-                        context.startActivity(intent)
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF57C00)),
-                    modifier = Modifier.fillMaxWidth().height(48.dp),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("Disable Battery Optimization", color = Color.White, fontWeight = FontWeight.Bold)
-                }
-                Spacer(modifier = Modifier.height(12.dp))
-            }
 
             if (showOemDialog) {
                 AlertDialog(
@@ -379,12 +378,12 @@ fun DashboardScreen(
                 Spacer(modifier = Modifier.height(12.dp))
             }
 
-            // Overlay permission request
-            if (!Settings.canDrawOverlays(context)) {
+            // Bug 6 fix: Overlay permission request uses aliased AndroidSettings
+            if (!AndroidSettings.canDrawOverlays(context)) {
                 Button(
                     onClick = {
                         val intent = Intent(
-                            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                            AndroidSettings.ACTION_MANAGE_OVERLAY_PERMISSION,
                             Uri.parse("package:${context.packageName}")
                         )
                         context.startActivity(intent)
@@ -397,7 +396,7 @@ fun DashboardScreen(
                 }
             }
             
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             // Emergency Mode Button
             Button(

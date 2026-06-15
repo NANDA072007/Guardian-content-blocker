@@ -20,6 +20,12 @@ class ServiceRestartReceiver : BroadcastReceiver() {
             } else {
                 context.startService(serviceIntent)
             }
+            
+            // Kickstart the resurrection chains
+            GuardianCoreService.scheduleAlarmChain(context)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                GuardianJobService.scheduleJob(context)
+            }
         }
     }
 }
