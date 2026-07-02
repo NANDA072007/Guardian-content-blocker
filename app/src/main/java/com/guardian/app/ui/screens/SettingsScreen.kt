@@ -27,7 +27,8 @@ import androidx.compose.foundation.border
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
     onNavigateToTrustedPerson: () -> Unit,
-    onNavigateToPrivacyPolicy: () -> Unit
+    onNavigateToPrivacyPolicy: () -> Unit,
+    onNavigateToDiagnostics: () -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -64,10 +65,19 @@ fun SettingsScreen(
             )
             
             Spacer(modifier = Modifier.height(16.dp))
+
+            SettingRow(
+                title = "Diagnostics",
+                subtitle = "View connection metrics and system states",
+                icon = Icons.Default.Warning,
+                onClick = onNavigateToDiagnostics
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
             
             SettingRow(
                 title = "Disable Guardian",
-                subtitle = "Requires Trusted Person's code",
+                subtitle = "Requires Guardian Code (24h cooloff)",
                 icon = Icons.Default.Lock,
                 onClick = onNavigateToTrustedPerson,
                 isDestructive = true

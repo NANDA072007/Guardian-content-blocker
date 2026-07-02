@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">Guardian</string>
-    <string name="accessibility_service_description">Monitors browser URL bar to block adult domains</string>
+    <string name="accessibility_service_description">Detects adult content typed in any app and protects Guardian settings from modification</string>
     <string name="device_admin_label">Guardian Anti-Uninstall</string>
     <string name="device_admin_description">Prevents unauthorized removal of the Guardian app</string>
     <string name="dashboard_title">Guardian Dashboard</string>
@@ -11,7 +11,7 @@
     <string name="wall_1_title">Wall 1 (DNS/VPN)</string>
     <string name="wall_1_desc">Blocks adult domains at network level</string>
     <string name="wall_2_title">Wall 2 (Accessibility)</string>
-    <string name="wall_2_desc">Monitors browser URL entry</string>
+    <string name="wall_2_desc">Detects typed content (including evasions like p0rnhub), pasted URLs, and browser page titles. Blocks settings tampering</string>
     <string name="wall_4_title">Wall 4 (Device Admin)</string>
     <string name="wall_4_desc">Prevents app uninstallation</string>
     <string name="system_armed">System Armed: Maximum Protection</string>

@@ -1,53 +1,114 @@
-# Guardian - Open Source Accountability App
+# Guardian — Open Source Accountability App
 
-Guardian is a powerful, privacy-first, on-device accountability application designed to help individuals break free from adult content addiction. Unlike traditional parental control apps that rely on expensive cloud subscriptions or can be easily bypassed, Guardian is built to be un-bypassable and entirely free.
+Guardian is a privacy-first, on-device accountability app that helps individuals break free from adult content addiction. It uses a **4-wall defense architecture** that cannot be bypassed, requires no cloud subscriptions, and is completely free.
 
-## Mission
-To provide a premium-grade, un-bypassable accountability tool completely free of charge for those who are struggling with addiction and cannot afford the $10-$15 monthly fees charged by other apps.
+## Architecture Overview
 
-## Key Features
+Guardian's defense is built on 4 independent walls. Each wall operates at a different OS layer so that disabling any one requires a different attack vector:
 
-🛡️ **4-Wall Protection Architecture**
-1. **Accessibility Sentry:** A deep-system overlay that monitors the screen for explicit content and instantly blocks it locally, preventing any bypass via incognito modes or alternative browsers.
-2. **Local DNS VPN:** A lightweight, on-device VPN that intercepts and null-routes domains known to host explicit content, without ever sending your browsing history to a remote server.
-3. **App Blocking & Uninstall Protection:** Prevents the user from uninstalling the app or killing the background services without authorization.
-4. **Device Administrator:** Hooks into Android's core to lock down the device from unauthorized tampering.
+| Wall | Layer | Mechanism | Stops |
+|------|-------|-----------|-------|
+| Wall 1 | Network (VPN) | Local DNS sinkhole — intercepts DNS queries to `8.8.8.8:53`, null-routes known adult domains via a blocklist (SHA-256 hashed, binary search); TCP RST injection for 18 known DoH/DoT providers | DNS resolution of adult domains (limited — only 2 domains seeded by default) |
+| Wall 2 | Accessibility | `AccessibilitySentry` foreground service (`onAccessibilityEvent`) scans node text across all apps via `BrowserMonitor` (100+ keywords, leetspeak normalization); `BlockOverlayManager` draws a full-screen DANGER overlay that consumes all touches (`onTouch=true`) + system keys (back/home/recent/volume) via `TYPE_ACCESSIBILITY_OVERLAY` | Typed keywords in any app (incognito, private browsing, 3rd-party keyboards, SMS, social media) |
+| Wall 3 | Overlay | `BlockOverlayManager` shows a 45-second immersive DANGER overlay with countdown timer, then a positive reinforcement screen ("YOU DID IT! +1 Strength"), then redirects to home screen | Bypass attempts during block event |
+| Wall 4 | Device Admin | `GuardianDeviceAdminReceiver` extends `DeviceAdminReceiver`; blocks uninstallation and force-stop via Android OS natively when active | App deletion, force-stop via Settings |
 
-🔒 **Trusted Person Accountability**
-You cannot disable Guardian on your own. If you attempt to uninstall the app or turn off the protection walls, a secure, cryptographic 24-hour cooloff period begins. You must enter an emergency unlock code that is ONLY given to your Trusted Person via SMS.
+Supporting systems:
+- **Auto-Resurrection Engine** (`ServiceResurrector`, `GuardianJobService`, `ServiceRestartReceiver`, `GuardianAlarmReceiver`, `WatchdogWorker`, `AccessibilityRecoveryWorker`) — multi-path health check that restarts any wall that Android's battery saver or OEM kills
+- **Streak Tracker** — offline clean-day streak computed on-the-fly from Room/SQLite block-event history (last relapse detected as 3+ events in 10-min window); tamper-resistant because it is derived from immutable event data
+- **Cooloff Timer** — SHA-256 gated 24-hour uninstall cooloff with rate-limiting penalties
 
-⏱️ **Emergency Sanctuary Mode**
-A built-in grounding tool designed to help users navigate intense urges. It features a calming, immersive breathing exercise (Inhale 4s, Hold 7s, Exhale 8s) and a one-tap emergency call button to your Trusted Person.
+## App Flow
 
-📈 **Resilient Streak Tracking**
-A completely offline, tamper-proof day streak counter that tracks your clean days accurately using system-time independent metrics.
+### 1. First Launch → Onboarding (6 Steps)
 
-🔋 **Auto-Resurrection Engine**
-If Android tries to kill the Guardian background service to save battery, our custom `WatchdogReceiver` and `GuardianJobService` instantly resurrects the protection layer, ensuring there are zero drops in coverage.
+Guardian walks the user through granting every permission it needs. No permission = no protection.
 
-## Privacy First
-**Zero Cloud Infrastructure.** All text analysis, domain blocking, and streak tracking occur entirely locally on your device. We do not track your browsing history.
+| Step | Permission | Why |
+|------|-----------|-----|
+| 1 | **Battery Optimization Exemption** | Prevents OEM battery saver from killing Guardian's foreground services |
+| 2 | **Overlay Permission** (`SYSTEM_ALERT_WINDOW`) | Enables the block overlay that covers adult content |
+| 3 | **Accessibility Service** | Lets `AccessibilitySentry` read screen content across all apps |
+| 4 | **VPN** (`VpnService`) | Activates the local DNS sinkhole (Wall 1) |
+| 5 | **Device Admin** | Prevents uninstallation without 24h cooloff (Wall 4) |
+| 6 | **Guardian Code** | App generates an 8-char alphanumeric code (e.g., `AB3F-K7XN`). **Save this** — it's required to pause protection or start the 24h uninstall cooloff |
 
-## Download & Install
+Once all 6 steps complete, the dashboard opens and all walls are active.
 
-For standard users, you do **not** need to download code or use Android Studio. You can download the app directly to your phone:
+### 2. Dashboard (Daily Use)
 
-1. Go to the [Releases Page](https://github.com/NANDA072007/Guardian-content-blocker/releases) of this repository.
-2. Download the latest `app-release.apk` file to your Android device.
-3. Open the file and tap **Install** (you may need to allow "Install from Unknown Sources" in your Android settings).
-4. Open Guardian and follow the setup instructions to activate the 4-Wall Protection.
+- **Status ring** — shows clean-day streak with milestone badges (3=💪, 7=⚡, 14=🔥, 30=🏆, 90=👑)
+- **Protection toggles** — each wall shows its status. Toggling a wall OFF triggers the cooloff check
+- **Pause Protection** — enter your Guardian Code for a 5-minute pause (settings temporarily unlocked)
+- **Emergency Mode** — immersive breathing exercise (4-7-8 method) to ride out urges
+- **Support** — customer service form that submits diagnostics to a Google Sheet
 
-### For Developers (If you want to contribute)
-If you want to view the source code or contribute:
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/NANDA072007/Guardian-content-blocker.git
-   ```
-2. Open the project in Android Studio.
-3. Sync Gradle and click `Run`. Pull requests are heavily encouraged!
+### 3. Uninstall / Disable Flow
 
-### Contributing
-This project is fully open-source. Pull requests for new features, bug fixes, and expanded blocklists are heavily encouraged!
+1. User navigates to Settings → Disable Guardian
+2. Enters their **Guardian Code**
+3. If correct, a **24-hour cooloff** starts (countdown shown on screen)
+4. After 24 hours, user can remove Device Admin privileges
+5. Only then can the app be uninstalled
+
+Wrong code attempts trigger escalating penalties: 1 min lockout after 5 failures, 5 min after 6, 30 min after 7+.
+
+### 4. Customer Service
+
+Users can submit a report with:
+- **Category**: Bug Report / Feature Request / Suggestion / Other
+- **Severity**: Minor / Major / Critical (only shown for Bug Report)
+- **Device Info**: 15 fields collected automatically (OS version, API level, device model, manufacturer, app version, build number, VPN state, accessibility state, device admin state, health level, battery optimization status, restricted settings blocking, overlay permission, uptime hours, last recovery time)
+- Cooldown: 30 seconds between submissions
+- Data is POSTed to a Google Form — no server infrastructure
+
+## Usage Guide
+
+### Installation
+1. Download the latest APK from Releases
+2. `Settings → Install unknown apps → Allow`
+3. Open Guardian → tap "I Understand"
+
+### Daily Habits
+- **Morning**: Check dashboard — if the ring is still green, all walls are active
+- **Urge**: Open Emergency Mode → breathe through the 4-7-8 cycle → leave the room
+- **Relapse**: Don't uninstall. Use the 5-min pause with your Guardian Code if you need to disable protections temporarily
+
+### Important Notes
+- **Write down your Guardian Code.** It cannot be recovered. If you lose it, you cannot pause or uninstall.
+- **OEM AutoStart**: Xiaomi/Oppo/Vivo/etc. users must enable AutoStart in system settings for Guardian, otherwise the OS may kill background services.
+- **Restricted Settings (Android 13+)**: If you sideloaded the APK, Android may block Accessibility. The dashboard shows a blue banner to guide you to "Allow restricted settings".
+
+## How to Promote Guardian
+
+### Target Audience
+1. **Individuals** struggling with porn addiction who can't afford $10-15/mo for Covenant Eyes / Ever Accountable / Canopy
+2. **Recovery communities** — Reddit (r/pornfree, r/nofap, r/REDDITORSINRECOVERY), Discord servers, 12-step groups
+3. **Religious / faith-based groups** — LDS (Fortify), Catholic (Covenant Eyes users looking for free alternative), Muslim accountability groups
+4. **Parents** of teens who want a free device-level accountability tool (though marketed as "self-accountability" to avoid the stigma)
+
+### Messaging Pillars
+1. **"It's free and always will be"** — biggest differentiator from Covenant Eyes ($15/mo)
+2. **"Unbypassable by design"** — the 4-wall architecture is harder to defeat than any other free tool
+3. **"Zero cloud, zero tracking"** — all processing on-device, no account, no data collection
+4. **"Your code, your lock"** — the Guardian Code puts you (not a 3rd party) in control
+
+### Distribution Channels
+
+| Channel | Approach |
+|---------|----------|
+| **Reddit** | Post in r/pornfree, r/nofap, r/androidapps. Avoid direct links — share the GitHub repo. Title format: "I built a free, open-source, unbypassable porn blocker for Android" |
+| **GitHub** | Add `porn-blocker`, `accountability-app`, `parental-controls`, `dns-filter`, `android-security` tags. Encourage star/watch for visibility |
+| **YouTube** | Publish a 3-minute setup walkthrough. Embed the video in the README |
+| **Recovery blogs** | Guest post: "Why I stopped paying $15/mo for Covenant Eyes and built an open-source alternative" |
+| **F-Droid** | Submit to F-Droid for discoverability in the free-software ecosystem |
+| **XDA Developers** | Post on XDA forums — the technical audience can validate and vouch for the architecture |
+
+### Quick Win Tactics
+- Create a `gh-pages` or Vercel landing page with a one-click APK download link
+- Add a **"Share Guardian"** button to the dashboard that generates a share text: *"I'm using Guardian — a free, private, unbypassable porn blocker. Download: [link]"*
+- Submit to **Product Hunt** (category: Android Apps, Open Source)
+- Add a **Lite version** bumper video for TikTok/Reels showing the danger-zone overlay in action
 
 ## License
-MIT License. Free forever.
+MIT — free forever.

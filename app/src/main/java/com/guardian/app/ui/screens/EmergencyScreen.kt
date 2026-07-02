@@ -17,10 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.shape.RoundedCornerShape
 import kotlinx.coroutines.delay
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.ui.platform.LocalContext
-import com.guardian.app.data.SecurityManager
 import android.app.Activity
 import android.view.WindowManager
 import androidx.core.view.WindowCompat
@@ -32,7 +29,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 @Composable
 fun EmergencyScreen(onNavigateBack: () -> Unit) {
     val context = LocalContext.current
-    val securityManager = remember { SecurityManager(context) }
     val activity = context as? Activity
     
     DisposableEffect(activity) {
@@ -197,38 +193,6 @@ fun EmergencyScreen(onNavigateBack: () -> Unit) {
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
 
-            Spacer(modifier = Modifier.height(48.dp))
-
-            val partnerNumber = securityManager.getTrustedPersonContact()
-            if (!partnerNumber.isNullOrEmpty()) {
-                Button(
-                    onClick = {
-                        val dialIntent = Intent(Intent.ACTION_DIAL).apply {
-                            data = Uri.parse("tel:$partnerNumber")
-                        }
-                        context.startActivity(dialIntent)
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                    contentPadding = PaddingValues(0.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(60.dp),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.horizontalGradient(
-                                    colors = listOf(Color(0xFFEF5350), Color(0xFFC62828))
-                                )
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("Call Trusted Person", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp, letterSpacing = 1.sp)
-                    }
-                }
-            }
         }
     }
 }

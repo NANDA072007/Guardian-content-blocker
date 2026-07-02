@@ -6,12 +6,16 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import android.content.Intent
 import android.os.Build
-import com.guardian.app.data.core.GuardianCoreService
+import com.guardian.app.core.GuardianCoreService
 import com.guardian.app.ui.navigation.AppNavigation
 import com.guardian.app.ui.theme.GuardianTheme
 
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+
+@dagger.hilt.android.AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {

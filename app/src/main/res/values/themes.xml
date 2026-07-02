@@ -2,4 +2,12 @@
 <resources>
 
     <style name="Theme.Guardian" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+        <!-- Set the splash screen background, animated icon, and animation duration. -->
+        <item name="windowSplashScreenBackground">#0F172A</item>
+        <!-- Use clear icon as placeholder for now since we don't have a logo yet -->
+        <item name="windowSplashScreenAnimatedIcon">@android:drawable/ic_secure</item>
+        <item name="postSplashScreenTheme">@style/Theme.Guardian</item>
+    </style>
 </resources>

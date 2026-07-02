@@ -1,13 +1,15 @@
 package com.guardian.app.manager
 
-import android.content.Context
-import com.guardian.app.data.SecurityManager
+import com.guardian.app.core.SecurityManager
 import com.guardian.app.data.db.DatabaseHelper
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class GuardianManager(private val context: Context) {
-
-    private val securityManager = SecurityManager(context)
-    val dbHelper = DatabaseHelper.getInstance(context)
+@Singleton
+class GuardianManager @Inject constructor(
+    private val securityManager: SecurityManager,
+    private val dbHelper: DatabaseHelper
+) {
 
     fun isSetupComplete(): Boolean = securityManager.isSetupComplete()
 

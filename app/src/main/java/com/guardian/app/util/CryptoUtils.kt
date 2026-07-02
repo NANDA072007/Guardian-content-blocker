@@ -11,8 +11,10 @@ object CryptoUtils {
         return bytes.joinToString("") { "%02x".format(it) }
     }
 
-    fun generateUnlockCode(): String {
-        return String.format("%06d", secureRandom.nextInt(900000) + 100000)
+    fun generateGuardianCode(): String {
+        val charPool = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+        val code = (1..8).map { charPool[secureRandom.nextInt(charPool.length)] }.joinToString("")
+        return "${code.substring(0, 4)}-${code.substring(4)}"
     }
 
     fun constantTimeEquals(a: ByteArray, b: ByteArray): Boolean {

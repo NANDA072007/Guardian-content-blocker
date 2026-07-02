@@ -13,6 +13,7 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <queries>
         <package android:name="com.android.chrome" />
@@ -30,6 +31,7 @@
     </queries>
 
     <application
+        android:name=".GuardianApplication"
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -42,7 +44,7 @@
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.Guardian"
+            android:theme="@style/Theme.App.Starting"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -52,7 +54,7 @@
         </activity>
 
         <service
-            android:name=".data.vpn.DnsVpnService"
+            android:name=".walls.wall1.DnsVpnService"
             android:permission="android.permission.BIND_VPN_SERVICE"
             android:exported="true"
             android:foregroundServiceType="specialUse">
@@ -64,19 +66,23 @@
                 android:value="specialUse" />
         </service>
         <service
-            android:name=".data.accessibility.AccessibilitySentry"
+            android:name=".walls.wall2.AccessibilitySentry"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
-            android:exported="true">
+            android:exported="true"
+            android:foregroundServiceType="specialUse">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />
             </intent-filter>
             <meta-data
                 android:name="android.accessibilityservice"
                 android:resource="@xml/accessibility_service_config" />
+            <property
+                android:name="android.foreground_service_provided_type"
+                android:value="specialUse" />
         </service>
 
         <receiver
-            android:name=".data.policy.GuardianDeviceAdminReceiver"
+            android:name=".broadcast.GuardianDeviceAdminReceiver"
             android:permission="android.permission.BIND_DEVICE_ADMIN"
             android:exported="true">
             <meta-data
@@ -88,7 +94,7 @@
         </receiver>
 
         <service
-            android:name=".data.core.GuardianCoreService"
+            android:name=".core.GuardianCoreService"
             android:exported="false"
             android:foregroundServiceType="specialUse">
             <property
@@ -96,8 +102,15 @@
                 android:value="specialUse" />
         </service>
 
+        <!-- GuardianJobService — Doze mode resurrection (survives reboot) -->
+        <service
+            android:name=".core.GuardianJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:exported="false" />
+
+        <!-- ServiceRestartReceiver — BOOT_COMPLETED + self-resurrection broadcast -->
         <receiver
-            android:name=".data.core.ServiceRestartReceiver"
+            android:name=".core.ServiceRestartReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
@@ -106,18 +119,23 @@
             </intent-filter>
         </receiver>
 
+        <!-- GuardianAlarmReceiver — AlarmManager chain resurrection -->
         <receiver
-            android:name=".data.core.WatchdogReceiver"
+            android:name=".core.GuardianAlarmReceiver"
             android:exported="false">
             <intent-filter>
-                <action android:name="com.guardian.ALARM_HEARTBEAT" />
+                <action android:name="com.guardian.app.ALARM_HEARTBEAT" />
             </intent-filter>
         </receiver>
 
-        <service
-            android:name=".data.core.GuardianJobService"
-            android:permission="android.permission.BIND_JOB_SERVICE"
-            android:exported="true" />
+        <!-- AdbReceiver — Detects USB/ADB connection for anti-tampering -->
+        <receiver
+            android:name=".broadcast.AdbReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.hardware.usb.action.USB_STATE" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>
